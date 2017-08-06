@@ -1,3 +1,11 @@
 language: node_js
 node_js:
 - node
+deploy:
+  provider: npm
+  email: christopher.andrejewski@gmail.com
+  api_key:
+    secure: jS6V+htg56fCuReJOK2CmlhWp7+rLbLPp/S+7AlINUAUDgjXPm+GPfoS8aZdnI9kMK+YxO4H4358t6b5qzRRzmS+UUm59CDzBTzy7NIiqWtg0IFh5MDU2+CavjlKbMON8/oULSdsb+dv1JYjoAYzXWV2suKZxh0vRV2EpxYVlgrhWffnTrHNzWRIXEtyBbuxGp6iY5uRV0wl9MgMkvNU9BVK4bFayZ08PulTQqPUumH4inRBR0byzOJNtoBWYdzC3Lzu+52MaYsNQhrDPCWnvVMB9wN80IHFvoD6W5s+37W/mzZ1RliC8esFQ8yzF7Xt2UYQT7+NZKIhWnUXkORHMZ0dLOhVGU/HrgZHsSA4lx4bXFWKiaVt339tx//5h0Od/ncr278TZO1mdOA9sZ++KZwcGWnDOLih56REM5ePKjgCxEYeLz68ywLUGM13yIE6sfEQiPBRJqgk9teSzX2nEqfdw3k01aLxiUb1Uhjj+ksI8STsr/YY+cPJh33SQKwtQ3JFzAJwH0avUOW3T0zvQ1/d8A7ft05sr30jp0o+Bb/WzgWW0rWrXlTsDgvPt7V2g8esYemUXOatjBsNVga3dJSWNQXHW82kXJcNcEOudb0CefOlJlNTq/1Vhvh+US+W1fauWOqefv6S6jO31zClDldZteOuKlEwALMe8TtkEJs=
+  on:
+    tags: true
+    repo: andrejewski/tagmeme

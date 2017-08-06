@@ -2,7 +2,7 @@
   "name": "tagmeme",
   "description": "Simple tagged unions",
   "version": "0.0.1",
-  "author": "Chris Andrejewski <christopher.andrejewski@gmail>",
+  "author": "Chris Andrejewski <christopher.andrejewski@gmail.com>",
   "bugs": {
     "url": "https://github.com/andrejewski/tagmeme/issues"
   },
@@ -14,10 +14,11 @@
   },
   "homepage": "https://github.com/andrejewski/tagmeme#readme",
   "keywords": [
-    "best",
-    "framework",
-    "message",
-    "react"
+    "adt",
+    "match",
+    "pattern",
+    "tag",
+    "union"
   ],
   "license": "MIT",
   "main": "index.js",
