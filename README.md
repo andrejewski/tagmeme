@@ -1,5 +1,4 @@
 # Tagmeme
-
 > Tagged unions
 
 ```sh
@@ -8,6 +7,7 @@ npm install tagmeme
 
 [![npm](https://img.shields.io/npm/v/tagmeme.svg)](https://www.npmjs.com/package/tagmeme)
 [![Build Status](https://travis-ci.org/andrejewski/tagmeme.svg?branch=master)](https://travis-ci.org/andrejewski/tagmeme)
+[![Greenkeeper badge](https://badges.greenkeeper.io/andrejewski/tagmeme.svg)](https://greenkeeper.io/)
 
 ## Usage
 
