@@ -1,5 +1,7 @@
 # Tagmeme
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/andrejewski/tagmeme.svg)](https://greenkeeper.io/)
+
 > Tagged unions
 
 ```sh
