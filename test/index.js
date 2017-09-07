@@ -29,7 +29,7 @@ test('Tag.unwrap should throw if used on the wrong tag type', t => {
 
   t.throws(() => {
     Foo.unwrap(bar, () => t.fail())
-  })
+  }, /Cannot unwrap/)
 })
 
 test('createTagUnion should return a union type', t => {
@@ -59,27 +59,27 @@ test('createTagUnion should throw if any type is not a Tag', t => {
 
   t.throws(() => {
     tag.union([Foo, 4])
-  })
+  }, /Invalid Tag/)
   t.throws(() => {
     tag.union([4, Foo])
-  })
+  }, /Invalid Tag/)
   t.throws(() => {
     tag.union([1, Foo, 2])
-  })
+  }, /Invalid Tag/)
 })
 
 test('createTagUnion should throw if there is a Tag duplicate', t => {
   const Foo = tag()
   t.throws(() => {
     tag.union([Foo, Foo])
-  })
+  }, /Duplicate Tag/)
 })
 
 test('Union should throw if called directly', t => {
   t.throws(() => {
     const Msg = tag.union([])
     Msg()
-  })
+  }, /cannot be created/)
 })
 
 test('Union.has should return whether a value is a tag of one of the Union types', t => {
@@ -123,7 +123,7 @@ test('Union.match throws if catch-all is not a function', t => {
       Foo, () => {},
       4
     ])
-  })
+  }, /catch-all must be/)
 })
 
 test('Union.match should throw if typeN is not a Tag', t => {
@@ -136,7 +136,7 @@ test('Union.match should throw if typeN is not a Tag', t => {
       4, () => {},
       () => {}
     ])
-  })
+  }, /type must be a Tag/)
 })
 
 test('Union.match should throw if handlerN is not a function', t => {
@@ -149,7 +149,7 @@ test('Union.match should throw if handlerN is not a function', t => {
       Foo, 4,
       () => {}
     ])
-  })
+  }, /handler must be a function/)
 })
 
 test('Union.match should throw if typeN is a duplicate Tag', t => {
@@ -162,7 +162,7 @@ test('Union.match should throw if typeN is a duplicate Tag', t => {
       Foo, () => {},
       Foo, () => {}
     ])
-  })
+  }, /type can only be covered by one/)
 })
 
 test('Union.match should throw if there are missing cases and no catch-all', t => {
@@ -176,7 +176,7 @@ test('Union.match should throw if there are missing cases and no catch-all', t =
     Msg.match(foo, [
       Foo, () => {}
     ])
-  })
+  }, /Not all cases are covered/)
 })
 
 test('Union.match should throw if all cases are handled and there is a catch-all', t => {
@@ -190,5 +190,5 @@ test('Union.match should throw if all cases are handled and there is a catch-all
       Foo, () => {},
       () => {}
     ])
-  })
+  }, /All cases are covered/)
 })

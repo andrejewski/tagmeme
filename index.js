@@ -92,9 +92,9 @@ function unionMatch (types, cases, tag) {
 
   const coversAll = matchedTags.length === types.length
   if (coversAll) {
-    assert(!hasCatchAll, 'Not all cases are covered so a catch all is needed')
+    assert(!hasCatchAll, 'All cases are covered so the catch all is useless')
   } else {
-    assert(hasCatchAll, 'All cases are covered so the catch all is useless')
+    assert(hasCatchAll, 'Not all cases are covered so a catch all is needed')
   }
 
   if (matchedType) {

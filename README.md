@@ -33,10 +33,10 @@ Increment.unwrap(incrementAction, n => {
 
 assert(Action.has(incrementAction))
 
-assert(10, Action.match(incrementAction, [
+assert(Action.match(incrementAction, [
   Increment, n => n,
   Decrement, n => -n
-]))
+]) === 10)
 ```
 
 ## Documentation
