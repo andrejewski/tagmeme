@@ -39,12 +39,20 @@ function isTag (type) {
 function createTagUnion (types) {
   assert(Array.isArray(types), 'types must be an array')
 
-  types.reduce((seenTypes, type, index) => {
-    assert(isTag(type), `Invalid Tag ${type} at index ${index}`)
-    assert(!seenTypes.includes(type), `Duplicate Tag ${type} at index ${index}`)
+  const seenTypes = []
+  const seenNames = []
+  for (let i = 0; i < types.length; i++) {
+    const type = types[i]
+    assert(isTag(type), `Invalid Tag ${type} at index ${i}`)
+    assert(isTag(type), `Invalid Tag ${type} at index ${i}`)
+    assert(!seenTypes.includes(type), `Duplicate Tag ${type} at index ${i}`)
     seenTypes.push(type)
-    return seenTypes
-  }, [])
+
+    if (type.displayName) {
+      assert(!seenNames.includes(type.displayName), `Duplicate Tag display name ${type.displayName}`)
+      seenNames.push(type.displayName)
+    }
+  }
 
   function UnionTag () {
     throw new Error('Tag unions cannot be created directly')
@@ -74,11 +82,13 @@ function unionMatch (types, cases, tag) {
   for (let i = 0; i < casesLen; i += 2) {
     const type = cases[i]
     const handler = cases[i + 1]
+    const label = tag.displayName ? `"${tag.displayName}"` : 'Unnamed tag'
     assert(isTag(type), `Each type must be a Tag, not ${type} at index ${i}`)
-    assert(!matchedTags.includes(type), `Each type can only be covered by one case, duplicate at index ${i}`)
+    assert(types.includes(type), `${label} is not in this union; add it to the union or remove this branch.`)
+    assert(!matchedTags.includes(type), `Each type can only be covered by one case, duplicate ${label} at index ${i}`)
     matchedTags.push(type)
 
-    assert(typeof handler === 'function', `Each handler must be a function, not ${type} at index ${i + 1}`)
+    assert(typeof handler === 'function', `The handler for ${label} must be a function, not ${handler} at index ${i + 1}`)
 
     if (type.is(tag)) {
       matchedType = type

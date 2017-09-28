@@ -75,6 +75,14 @@ test('createTagUnion should throw if there is a Tag duplicate', t => {
   }, /Duplicate Tag/)
 })
 
+test('createTagUnion should throw if there is a duplicate Tag displayName', t => {
+  const Foo = tag('Foo')
+  const Bar = tag('Foo')
+  t.throws(() => {
+    tag.union([Foo, Bar])
+  }, /display name/)
+})
+
 test('Union should throw if called directly', t => {
   t.throws(() => {
     const Msg = tag.union([])
@@ -149,7 +157,7 @@ test('Union.match should throw if handlerN is not a function', t => {
       Foo, 4,
       () => {}
     ])
-  }, /handler must be a function/)
+  }, /must be a function/)
 })
 
 test('Union.match should throw if typeN is a duplicate Tag', t => {
@@ -191,4 +199,17 @@ test('Union.match should throw if all cases are handled and there is a catch-all
       () => {}
     ])
   }, /All cases are covered/)
+})
+
+test('Union.match should throw if a tag is not a member of the union', t => {
+  const Foo = tag()
+  const Stray = tag()
+  const Msg = tag.union([Foo])
+
+  t.throws(() => {
+    Msg.match(Foo(1), [
+      Foo, () => 2,
+      Stray, () => 3
+    ])
+  }, /not in this union/)
 })
