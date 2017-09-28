@@ -24,7 +24,8 @@ function createTag (displayName) {
     return fn.apply(null, tag.args)
   }
 
-  if (typeof displayName === 'string') {
+  if (displayName) {
+    assert(typeof displayName === 'string', 'displayName must be a string if provided')
     Tag.name = displayName
     Tag.displayName = displayName
   }
@@ -118,5 +119,24 @@ function unionIs (types, type) {
   return types.some(Type => Type.is(type))
 }
 
+function createNamedTagUnion (names) {
+  assert(Array.isArray(names), 'Names must be an array')
+  const len = names.length
+  const tags = []
+  for (let i = 0; i < len; i++) {
+    const name = names[i]
+    assert(typeof name === 'string', `Name at index ${i} must be a string, not ${name}`)
+    tags.push(createTag(name))
+  }
+  const union = createTagUnion(tags)
+  for (let i = 0; i < len; i++) {
+    const name = names[i]
+    assert(union[name] === undefined, `Property name "${name}" is reserved on the union.`)
+    union[names[i]] = tags[i]
+  }
+  return union
+}
+
 createTag.union = createTagUnion
+createTag.namedUnion = createNamedTagUnion
 module.exports = createTag

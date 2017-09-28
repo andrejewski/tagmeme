@@ -16,6 +16,12 @@ test('createTag should return a tag type', t => {
   })
 })
 
+test('createTag should throw if provided displayName is not a string', t => {
+  t.throws(() => {
+    tag(4)
+  }, /must be a string/)
+})
+
 test('Tag.is should return whether a value is of type Tag', t => {
   const Foo = tag()
   const foo = Foo()
@@ -212,4 +218,31 @@ test('Union.match should throw if a tag is not a member of the union', t => {
       Stray, () => 3
     ])
   }, /not in this union/)
+})
+
+test('createNamedTagUnion should create a union with tags assign to it', t => {
+  const Msg = tag.namedUnion(['Foo', 'Bar'])
+  t.is(Msg.has(Msg.Foo(1)), true)
+  t.is(Msg.has(Msg.Bar(2)), true)
+
+  t.is(Msg.Foo.is(Msg.Foo(8)), true)
+  t.is(Msg.Bar.is(Msg.Bar(7)), true)
+})
+
+test('createNamedTagUnion should throw if names is not an array', t => {
+  t.throws(() => {
+    tag.namedUnion({hello: 'world'})
+  }, /must be an array/)
+})
+
+test('createNamedTagUnion should throw if any name is not a string', t => {
+  t.throws(() => {
+    tag.namedUnion(['Hello', 2, 'World'])
+  }, /must be a string/)
+})
+
+test('createNamedTagUnion should throw if any name conflicts with a previous property', t => {
+  t.throws(() => {
+    tag.namedUnion(['has'])
+  }, /reserved/)
 })
