@@ -34,7 +34,7 @@ function createTag (displayName) {
 }
 
 function isTag (type) {
-  return !!(type.is && type.unwrap)
+  return !!(type && type.is && type.unwrap)
 }
 
 function createTagUnion (types) {
@@ -83,7 +83,7 @@ function unionMatch (types, cases, tag) {
   for (let i = 0; i < casesLen; i += 2) {
     const type = cases[i]
     const handler = cases[i + 1]
-    const label = tag.displayName ? `"${tag.displayName}"` : 'Unnamed tag'
+    const label = (type && type.displayName) ? `"${type.displayName}"` : 'Unnamed tag'
     assert(isTag(type), `Each type must be a Tag, not ${type} at index ${i}`)
     assert(types.includes(type), `${label} is not in this union; add it to the union or remove this branch.`)
     assert(!matchedTags.includes(type), `Each type can only be covered by one case, duplicate ${label} at index ${i}`)

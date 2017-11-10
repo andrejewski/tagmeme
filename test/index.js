@@ -147,6 +147,7 @@ test('Union.match should throw if typeN is not a Tag', t => {
 
   t.throws(() => {
     Msg.match(foo, [
+      undefined, () => {},
       4, () => {},
       () => {}
     ])
@@ -209,8 +210,15 @@ test('Union.match should throw if all cases are handled and there is a catch-all
 
 test('Union.match should throw if a tag is not a member of the union', t => {
   const Foo = tag()
-  const Stray = tag()
+  const Stray = tag('Stray')
   const Msg = tag.union([Foo])
+
+  t.throws(() => {
+    Msg.match(Foo(1), [
+      Foo, () => 2,
+      Stray, () => 3
+    ])
+  }, /Stray/)
 
   t.throws(() => {
     Msg.match(Foo(1), [
