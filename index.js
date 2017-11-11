@@ -125,6 +125,16 @@ function createNamedTagUnion (names) {
     tags.push(createTag(name))
   }
   const union = createTagUnion(tags)
+  union.namedMatch = function namedMatch (tag, namedHandlerMap, catchAll) {
+    const cases = []
+    for (let key in namedHandlerMap) {
+      cases.push(union[key], namedHandlerMap[key])
+    }
+    if (catchAll) {
+      cases.push(catchAll)
+    }
+    return union.match(tag, cases)
+  }
   for (let i = 0; i < len; i++) {
     const name = names[i]
     assert(union[name] === undefined, `Property name "${name}" is reserved on the union.`)

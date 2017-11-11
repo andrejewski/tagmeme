@@ -254,3 +254,14 @@ test('createNamedTagUnion should throw if any name conflicts with a previous pro
     tag.namedUnion(['has'])
   }, /reserved/)
 })
+
+test('namedTagUnion.namedUnion should match with an object of handlers', t => {
+  const Msg = tag.namedUnion(['Foo', 'Bar'])
+
+  t.is(Msg.namedMatch(Msg.Foo(8), {
+    Foo: n => n,
+    Bar: n => 0
+  }), 8)
+
+  t.is(Msg.namedMatch(Msg.Foo(7), {}, () => 6), 6)
+})
