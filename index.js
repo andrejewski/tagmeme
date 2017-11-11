@@ -1,8 +1,4 @@
-function assert (condition, tag) {
-  if (!condition) {
-    throw new Error(tag)
-  }
-}
+const assert = require('invariant')
 
 function createTag (displayName) {
   function Tag () {
@@ -34,7 +30,7 @@ function createTag (displayName) {
 }
 
 function isTag (type) {
-  return !!(type.is && type.unwrap)
+  return !!(type && type.is && type.unwrap)
 }
 
 function createTagUnion (types) {
@@ -70,6 +66,10 @@ function createTagUnion (types) {
   return UnionTag
 }
 
+function getTagName (tag) {
+  return (tag && tag.displayName) ? `"${tag.displayName}"` : 'Unnamed tag'
+}
+
 function unionMatch (types, cases, tag) {
   assert(unionIs(types, tag), `The tag being matched on should be of a type in the union, not ${tag}`)
 
@@ -83,7 +83,7 @@ function unionMatch (types, cases, tag) {
   for (let i = 0; i < casesLen; i += 2) {
     const type = cases[i]
     const handler = cases[i + 1]
-    const label = tag.displayName ? `"${tag.displayName}"` : 'Unnamed tag'
+    const label = getTagName(type)
     assert(isTag(type), `Each type must be a Tag, not ${type} at index ${i}`)
     assert(types.includes(type), `${label} is not in this union; add it to the union or remove this branch.`)
     assert(!matchedTags.includes(type), `Each type can only be covered by one case, duplicate ${label} at index ${i}`)
@@ -105,7 +105,11 @@ function unionMatch (types, cases, tag) {
   if (coversAll) {
     assert(!hasCatchAll, 'All cases are covered so the catch all is useless')
   } else {
-    assert(hasCatchAll, 'Not all cases are covered so a catch all is needed')
+    const missingTags = types
+      .filter(type => !matchedTags.includes(type))
+      .map(getTagName)
+      .join(', ')
+    assert(hasCatchAll, `Not all cases are covered so a catch all is needed. Missing tags: ${missingTags}`)
   }
 
   if (matchedType) {
@@ -129,6 +133,16 @@ function createNamedTagUnion (names) {
     tags.push(createTag(name))
   }
   const union = createTagUnion(tags)
+  union.namedMatch = function namedMatch (tag, namedHandlerMap, catchAll) {
+    const cases = []
+    for (let key in namedHandlerMap) {
+      cases.push(union[key], namedHandlerMap[key])
+    }
+    if (catchAll) {
+      cases.push(catchAll)
+    }
+    return union.match(tag, cases)
+  }
   for (let i = 0; i < len; i++) {
     const name = names[i]
     assert(union[name] === undefined, `Property name "${name}" is reserved on the union.`)

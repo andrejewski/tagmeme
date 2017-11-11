@@ -6,7 +6,9 @@
   "bugs": {
     "url": "https://github.com/andrejewski/tagmeme/issues"
   },
-  "dependencies": {},
+  "dependencies": {
+    "invariant": "^2.2.2"
+  },
   "devDependencies": {
     "ava": "^0.23.0",
     "fixpack": "^2.3.1",

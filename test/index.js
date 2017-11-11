@@ -147,6 +147,7 @@ test('Union.match should throw if typeN is not a Tag', t => {
 
   t.throws(() => {
     Msg.match(foo, [
+      undefined, () => {},
       4, () => {},
       () => {}
     ])
@@ -193,6 +194,20 @@ test('Union.match should throw if there are missing cases and no catch-all', t =
   }, /Not all cases are covered/)
 })
 
+test('Union.match should throw if there are missing cases and no catch-all', t => {
+  const Foo = tag('Foo')
+  const Bar = tag('Bar')
+  const Msg = tag.union([Foo, Bar])
+
+  const foo = Foo(12)
+
+  t.throws(() => {
+    Msg.match(foo, [
+      Foo, () => {}
+    ])
+  }, /Bar/)
+})
+
 test('Union.match should throw if all cases are handled and there is a catch-all', t => {
   const Foo = tag()
   const Msg = tag.union([Foo])
@@ -209,8 +224,15 @@ test('Union.match should throw if all cases are handled and there is a catch-all
 
 test('Union.match should throw if a tag is not a member of the union', t => {
   const Foo = tag()
-  const Stray = tag()
+  const Stray = tag('Stray')
   const Msg = tag.union([Foo])
+
+  t.throws(() => {
+    Msg.match(Foo(1), [
+      Foo, () => 2,
+      Stray, () => 3
+    ])
+  }, /Stray/)
 
   t.throws(() => {
     Msg.match(Foo(1), [
@@ -245,4 +267,15 @@ test('createNamedTagUnion should throw if any name conflicts with a previous pro
   t.throws(() => {
     tag.namedUnion(['has'])
   }, /reserved/)
+})
+
+test('namedTagUnion.namedUnion should match with an object of handlers', t => {
+  const Msg = tag.namedUnion(['Foo', 'Bar'])
+
+  t.is(Msg.namedMatch(Msg.Foo(8), {
+    Foo: n => n,
+    Bar: n => 0
+  }), 8)
+
+  t.is(Msg.namedMatch(Msg.Foo(7), {}, () => 6), 6)
 })
