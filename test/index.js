@@ -194,6 +194,20 @@ test('Union.match should throw if there are missing cases and no catch-all', t =
   }, /Not all cases are covered/)
 })
 
+test('Union.match should throw if there are missing cases and no catch-all', t => {
+  const Foo = tag('Foo')
+  const Bar = tag('Bar')
+  const Msg = tag.union([Foo, Bar])
+
+  const foo = Foo(12)
+
+  t.throws(() => {
+    Msg.match(foo, [
+      Foo, () => {}
+    ])
+  }, /Bar/)
+})
+
 test('Union.match should throw if all cases are handled and there is a catch-all', t => {
   const Foo = tag()
   const Msg = tag.union([Foo])
