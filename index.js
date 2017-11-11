@@ -1,8 +1,4 @@
-function assert (condition, tag) {
-  if (!condition) {
-    throw new Error(tag)
-  }
-}
+const assert = require('invariant')
 
 function createTag (displayName) {
   function Tag () {
