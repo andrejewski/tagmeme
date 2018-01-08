@@ -1,156 +1,77 @@
-const assert = require('invariant')
+const invariant = require('invariant')
 
-function createTag (displayName) {
-  function Tag () {
-    if (!(this instanceof Tag)) {
-      const tag = new Tag()
-      tag.args = arguments
-      return tag
-    }
+function checkKinds (kinds) {
+  invariant(Array.isArray(kinds), 'kinds must be an array')
 
-    this.args = arguments
+  const seen = {}
+  for (let i = 0; i < kinds.length; i++) {
+    const kind = kinds[i]
+    invariant(typeof kind === 'string', 'Tag kind must be a string')
+    invariant(kind !== 'match', 'Tag kind cannot be "match"')
+    invariant(!seen[kind], `Duplicate tag kind "${kind}". Kinds must be unique`)
+    seen[kind] = true
   }
-
-  Tag.is = function is (x) {
-    return x instanceof Tag
-  }
-
-  Tag.unwrap = function unwrap (tag, fn) {
-    assert(Tag.is(tag), 'Cannot unwrap tags using an incorrect type')
-    return fn.apply(null, tag.args)
-  }
-
-  if (displayName) {
-    assert(typeof displayName === 'string', 'displayName must be a string if provided')
-    Tag.name = displayName
-    Tag.displayName = displayName
-  }
-
-  return Tag
 }
 
-function isTag (type) {
-  return !!(type && type.is && type.unwrap)
-}
+function checkMatch (tag, handlers, catchAll, kinds, Tag) {
+  invariant(tag instanceof Tag, 'Value must be a tag of the union')
 
-function createTagUnion (types) {
-  assert(Array.isArray(types), 'types must be an array')
-
-  const seenTypes = []
-  const seenNames = []
-  for (let i = 0; i < types.length; i++) {
-    const type = types[i]
-    assert(isTag(type), `Invalid Tag ${type} at index ${i}`)
-    assert(isTag(type), `Invalid Tag ${type} at index ${i}`)
-    assert(!seenTypes.includes(type), `Duplicate Tag ${type} at index ${i}`)
-    seenTypes.push(type)
-
-    if (type.displayName) {
-      assert(!seenNames.includes(type.displayName), `Duplicate Tag display name ${type.displayName}`)
-      seenNames.push(type.displayName)
-    }
+  const seenKinds = []
+  for (let key in handlers) {
+    invariant(
+      kinds.includes(key),
+      `Key "${key}" is not a tag kind of the union`
+    )
+    const handler = handlers[key]
+    invariant(
+      typeof handler === 'function',
+      `Key "${key}" value must be a function`
+    )
+    seenKinds.push(key)
   }
 
-  function UnionTag () {
-    throw new Error('Tag unions cannot be created directly')
-  }
-
-  UnionTag.has = function is (type) {
-    return unionIs(types, type)
-  }
-
-  UnionTag.match = function match (type, cases) {
-    return unionMatch(types, cases, type)
-  }
-
-  return UnionTag
-}
-
-function getTagName (tag) {
-  return (tag && tag.displayName) ? `"${tag.displayName}"` : 'Unnamed tag'
-}
-
-function unionMatch (types, cases, tag) {
-  assert(unionIs(types, tag), `The tag being matched on should be of a type in the union, not ${tag}`)
-
-  const hasCatchAll = cases.length % 2 === 1
-  const catchAll = hasCatchAll && cases[cases.length - 1]
-  const casesLen = cases.length - (hasCatchAll ? 1 : 0)
-
-  let matchedType
-  let matchedFn
-  const matchedTags = []
-  for (let i = 0; i < casesLen; i += 2) {
-    const type = cases[i]
-    const handler = cases[i + 1]
-    const label = getTagName(type)
-    assert(isTag(type), `Each type must be a Tag, not ${type} at index ${i}`)
-    assert(types.includes(type), `${label} is not in this union; add it to the union or remove this branch.`)
-    assert(!matchedTags.includes(type), `Each type can only be covered by one case, duplicate ${label} at index ${i}`)
-    matchedTags.push(type)
-
-    assert(typeof handler === 'function', `The handler for ${label} must be a function, not ${handler} at index ${i + 1}`)
-
-    if (type.is(tag)) {
-      matchedType = type
-      matchedFn = handler
-    }
-  }
-
-  if (hasCatchAll) {
-    assert(typeof catchAll === 'function', `The catch-all must be a function, not ${catchAll}`)
-  }
-
-  const coversAll = matchedTags.length === types.length
-  if (coversAll) {
-    assert(!hasCatchAll, 'All cases are covered so the catch all is useless')
+  if (catchAll) {
+    invariant(
+      kinds.length !== seenKinds.length,
+      'All kinds are handled; remove unnecessary catch-all'
+    )
+    invariant(typeof catchAll === 'function', 'catch-all must be a function')
   } else {
-    const missingTags = types
-      .filter(type => !matchedTags.includes(type))
-      .map(getTagName)
-      .join(', ')
-    assert(hasCatchAll, `Not all cases are covered so a catch all is needed. Missing tags: ${missingTags}`)
+    const missingKinds = kinds.filter(kind => !seenKinds.includes(kind))
+    invariant(
+      kinds.length === seenKinds.length,
+      `All kinds are not handled; add a catch-all. Missing kinds: ${missingKinds.join(', ')}`
+    )
   }
-
-  if (matchedType) {
-    return matchedType.unwrap(tag, matchedFn)
-  }
-
-  return catchAll()
 }
 
-function unionIs (types, type) {
-  return types.some(Type => Type.is(type))
-}
-
-function createNamedTagUnion (names) {
-  assert(Array.isArray(names), 'Names must be an array')
-  const len = names.length
-  const tags = []
-  for (let i = 0; i < len; i++) {
-    const name = names[i]
-    assert(typeof name === 'string', `Name at index ${i} must be a string, not ${name}`)
-    tags.push(createTag(name))
+function union (kinds) {
+  if (process.env.NODE_ENV !== 'production') {
+    checkKinds(kinds)
   }
-  const union = createTagUnion(tags)
-  union.namedMatch = function namedMatch (tag, namedHandlerMap, catchAll) {
-    const cases = []
-    for (let key in namedHandlerMap) {
-      cases.push(union[key], namedHandlerMap[key])
+
+  function Tag (kind, data) {
+    this._kind = kind
+    this._data = data
+  }
+
+  const tagUnion = {
+    match (tag, handlers, catchAll) {
+      if (process.env.NODE_ENV !== 'production') {
+        checkMatch(tag, handlers, catchAll, kinds, Tag)
+      }
+
+      const match = handlers[tag._kind]
+      return match ? match(tag._data) : catchAll()
     }
-    if (catchAll) {
-      cases.push(catchAll)
-    }
-    return union.match(tag, cases)
   }
-  for (let i = 0; i < len; i++) {
-    const name = names[i]
-    assert(union[name] === undefined, `Property name "${name}" is reserved on the union.`)
-    union[names[i]] = tags[i]
+
+  for (let i = 0; i < kinds.length; i++) {
+    const kind = kinds[i]
+    tagUnion[kind] = data => new Tag(kind, data)
   }
-  return union
+
+  return tagUnion
 }
 
-createTag.union = createTagUnion
-createTag.namedUnion = createNamedTagUnion
-module.exports = createTag
+exports.union = union

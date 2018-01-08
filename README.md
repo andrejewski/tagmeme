@@ -12,54 +12,38 @@ npm install tagmeme
 ## Usage
 
 ```js
-import tag from 'tagmeme'
+import {union} from 'tagmeme'
 import assert from 'assert'
 
-const Increment = tag()
-const Decrement = tag()
+const Result = union(['Ok', 'Err'])
 
-const Action = tag.union([
-  Increment,
-  Decrement
-])
+const err = Result.Err(new Error('My error'))
 
-const incrementAction = Increment(10)
-assert(Increment.is(incrementAction))
-assert(!Decrement.is(incrementAction))
-
-Increment.unwrap(incrementAction, n => {
-  assert(n === 10)
+const message = Result.match(err, {
+  Ok: () => 'No error',
+  Err: error => error.message
 })
 
-assert(Action.has(incrementAction))
-
-assert(Action.match(incrementAction, [
-  Increment, n => n,
-  Decrement, n => -n
-]) === 10)
+assert(message === 'My error')
 ```
 
 ## Documentation
 
-- `tag([displayName])`: create a **Tag** with an optional name
-- `tag.union(tags)`: create a **Union** of an array of Tags
+#### `union(kinds: string[]): Union`
+Create a tagged union.
 
-#### Tag
-  - `Tag(...args)`: create a tag of type `Tag` with arguments
-  - `Tag.is(tag)`: check whether `tag` is of type `Tag`
-  - `Tag.unwrap(tag, fn)`: calls `fn` with the arguments passed to `tag`. Throws an error if `tag` is not of type `Tag`.
+#### `Union[kind](data: any): Tag`
+Create a tag of the union containing `data` which can be retrieved via `Union.match`.
 
-#### Union
-  - `Union.has(tag)`: check whether `tag` is of a Tag type within `Union`
-  - `Union.match(tag, [type1, handler1, type2, handler2, ..., catchAll])`: pattern match on `tag`.
-    Throws if:
-      - `tag` is not of any of the union types
-      - `tag` does not match any type and there is no `catchAll`
-      - any `typeN` is not a Tag
-      - any `handlerN` is not a function
-      - if it handles all cases and there is a useless `catchAll`
-      - if it does not handle all cases and there is no `catchAll`
-      - if there is a Tag handled more than once
+#### `Union.match(tag, handlers, catchAll)`
+Pattern match on `tag` with a hashmap of `handlers` where keys are kinds and values are functions, with an optional `catchAll` if no handler matches the value.
+Throws if:
+  - `tag` is not of any of the union types
+  - `tag` does not match any type and there is no `catchAll`
+  - any `handlers` key is not a kind in the union
+  - any `handlers` value is not a function
+  - it handles all cases and there is a useless `catchAll`
+  - it does not handle all cases and there is no `catchAll`
 
 ## Name
 
