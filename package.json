@@ -3,6 +3,12 @@
   "description": "Simple tagged unions",
   "version": "0.0.6",
   "author": "Chris Andrejewski <christopher.andrejewski@gmail.com>",
+  "babel": {
+    "presets": [
+      "es2015",
+      "stage-3"
+    ]
+  },
   "bugs": {
     "url": "https://github.com/andrejewski/tagmeme/issues"
   },
@@ -11,6 +17,10 @@
   },
   "devDependencies": {
     "ava": "^0.25.0",
+    "babel-cli": "^6.24.1",
+    "babel-core": "^6.25.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-stage-3": "^6.24.1",
     "fixpack": "^2.3.1",
     "standard": "^11.0.0"
   },
@@ -23,13 +33,15 @@
     "union"
   ],
   "license": "MIT",
-  "main": "index.js",
+  "main": "lib/index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/andrejewski/tagmeme.git"
   },
   "scripts": {
+    "build": "babel src --out-dir lib",
     "lint": "fixpack && standard --fix",
+    "prepublishOnly": "npm run build",
     "test": "npm run lint && ava"
   }
 }
