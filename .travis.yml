@@ -9,3 +9,4 @@ deploy:
   on:
     tags: true
     repo: andrejewski/tagmeme
+  skip_cleanup: true

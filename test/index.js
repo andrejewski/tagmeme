@@ -1,5 +1,5 @@
 import test from 'ava'
-import { union } from '../index'
+import { union } from '../src/'
 
 test('union() should return an object with match method', t => {
   const Msg = union([])
