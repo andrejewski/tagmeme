@@ -27,6 +27,22 @@ test('union() should throw if there is a kind "match"', t => {
   t.throws(() => union(['match']), /cannot be "match"/)
 })
 
+test('union() should throw if there is a kind "matches"', t => {
+  t.throws(() => union(['matches']), /cannot be "matches"/)
+})
+
+test('union() prefix should be added to types', t => {
+  const A = union(['Foo'], { prefix: 'a/' })
+  t.is(A.Foo().type, 'a/Foo')
+})
+
+test('union() prefix should prevent name conflicts', t => {
+  const A = union(['Foo'], { prefix: 'a/' })
+  const B = union(['Foo'], { prefix: 'b/' })
+
+  t.notDeepEqual(A.Foo(), B.Foo())
+})
+
 test('match() should return the handler return value', t => {
   const Msg = union(['Foo'])
   const val = Msg.Foo()
@@ -67,7 +83,7 @@ test('match() should throw if handler[kind] is not of the union', t => {
 
   t.throws(() => {
     Msg.match(val, { Bar: () => 1 })
-  }, /not a tag kind of the union/)
+  }, /not a tag type of the union/)
 })
 
 test('match() should throw if handler[kind] is not a function', t => {
@@ -104,4 +120,83 @@ test('match() should throw if a catch-all is not needed', t => {
   t.throws(() => {
     Msg.match(val, { Foo: () => {} }, () => {})
   }, /remove unnecessary catch-all/)
+})
+
+test('matches() should return whether the tag matches type', t => {
+  const Msg = union(['Foo', 'Bar'])
+  t.true(Msg.matches(Msg.Foo(), Msg.Foo))
+  t.true(Msg.matches(Msg.Bar(), Msg.Bar))
+
+  t.false(Msg.matches(Msg.Foo(), Msg.Bar))
+  t.false(Msg.matches(Msg.Bar(), Msg.Foo))
+})
+
+test('matches() should throw if tag is not an object', t => {
+  const A = union(['Foo'])
+
+  t.throws(() => {
+    A.matches(8, A.Foo)
+  }, /must be an object/)
+})
+
+test('matches() should throw if tag type is not a string', t => {
+  const A = union(['Foo'])
+
+  t.throws(() => {
+    A.matches({ type: 8 }, A.Foo)
+  }, /type must be a string/)
+})
+
+test('matches() should throw if tag is not of the union', t => {
+  const A = union(['Foo'])
+  const B = union(['Bar'])
+
+  t.throws(() => {
+    A.matches(B.Bar(), A.Foo)
+  }, /must be a tag of the union/)
+})
+
+test('matches() should throw if type is not provided', t => {
+  const A = union(['Foo'])
+
+  t.throws(() => {
+    A.matches(A.Foo())
+  }, /must be provided/)
+})
+
+test('matches() should throw if type is not of the union', t => {
+  const A = union(['Foo'])
+  const B = union(['Bar'])
+
+  t.throws(() => {
+    A.matches(A.Foo(), B.Bar)
+  }, /must be a type of the union/)
+})
+
+test('tags should be de/serialize-able', t => {
+  const Msg = union(['Foo'])
+  const tag = Msg.Foo('cake')
+  const tagCopy = JSON.parse(JSON.stringify(tag))
+
+  t.true(
+    Msg.match(tagCopy, {
+      Foo: () => true
+    })
+  )
+
+  t.true(Msg.matches(tagCopy, Msg.Foo))
+})
+
+test('tags should be de/serialize-able with prefixes', t => {
+  const Msg = union(['Foo'], { prefix: 'a/' })
+  const tag = Msg.Foo('cake')
+  const tagCopy = JSON.parse(JSON.stringify(tag))
+
+  t.true(
+    Msg.match(tagCopy, {
+      Foo: () => true
+    })
+  )
+
+  t.true(Msg.matches(tagCopy, Msg.Foo))
 })
