@@ -12,8 +12,8 @@ npm install tagmeme
 ## Usage
 
 ```js
-import {union} from 'tagmeme'
 import assert from 'assert'
+import { union } from 'tagmeme'
 
 const Result = union(['Ok', 'Err'])
 
@@ -25,14 +25,18 @@ const message = Result.match(err, {
 })
 
 assert(message === 'My error')
+
+const isError = Result.matches(err, Result.Err)
+
+assert(isError)
 ```
 
 ## Documentation
 
-#### `union(kinds: string[]): Union`
+#### `union(types: string[], options: { prefix: string }): Union`
 Create a tagged union.
 
-#### `Union[kind](data: any): Tag`
+#### `Union[type](data: any): ({ type, data })`
 Create a tag of the union containing `data` which can be retrieved via `Union.match`.
 
 #### `Union.match(tag, handlers, catchAll)`
@@ -44,6 +48,9 @@ Throws if:
   - any `handlers` value is not a function
   - it handles all cases and there is a useless `catchAll`
   - it does not handle all cases and there is no `catchAll`
+
+#### `Union.matches(tag, Type): boolean`
+Determine whether a given `tag` is of `Type`.
 
 ## Name
 

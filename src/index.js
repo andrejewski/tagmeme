@@ -1,74 +1,109 @@
 const invariant = require('invariant')
 
-function checkKinds (kinds) {
-  invariant(Array.isArray(kinds), 'kinds must be an array')
+function checkTypes (types) {
+  invariant(Array.isArray(types), 'types must be an array')
 
   const seen = {}
-  for (let i = 0; i < kinds.length; i++) {
-    const kind = kinds[i]
-    invariant(typeof kind === 'string', 'Tag kind must be a string')
-    invariant(kind !== 'match', 'Tag kind cannot be "match"')
-    invariant(!seen[kind], `Duplicate tag kind "${kind}". Kinds must be unique`)
-    seen[kind] = true
+  for (let i = 0; i < types.length; i++) {
+    const type = types[i]
+    invariant(typeof type === 'string', 'Tag type must be a string')
+    invariant(type !== 'match', 'Tag type cannot be "match"')
+    invariant(type !== 'matches', 'Tag type cannot be "matches"')
+    invariant(!seen[type], `Duplicate tag type "${type}". Types must be unique`)
+    seen[type] = true
   }
 }
 
-function checkMatch (tag, handlers, catchAll, kinds, Tag) {
-  invariant(tag instanceof Tag, 'Value must be a tag of the union')
-
-  const seenKinds = []
+function checkMatch (handlers, catchAll, types) {
+  const seenTypes = []
   for (let key in handlers) {
     invariant(
-      kinds.includes(key),
-      `Key "${key}" is not a tag kind of the union`
+      types.includes(key),
+      `Key "${key}" is not a tag type of the union`
     )
     const handler = handlers[key]
     invariant(
       typeof handler === 'function',
       `Key "${key}" value must be a function`
     )
-    seenKinds.push(key)
+    seenTypes.push(key)
   }
 
   if (catchAll) {
     invariant(
-      kinds.length !== seenKinds.length,
-      'All kinds are handled; remove unnecessary catch-all'
+      types.length !== seenTypes.length,
+      'All types are handled; remove unnecessary catch-all'
     )
     invariant(typeof catchAll === 'function', 'catch-all must be a function')
   } else {
-    const missingKinds = kinds.filter(kind => !seenKinds.includes(kind))
+    const missingTypes = types.filter(type => !seenTypes.includes(type))
     invariant(
-      kinds.length === seenKinds.length,
-      `All kinds are not handled; add a catch-all. Missing kinds: ${missingKinds.join(', ')}`
+      types.length === seenTypes.length,
+      `All types are not handled; add a catch-all. Missing types: ${missingTypes.join(', ')}`
     )
   }
 }
 
-function union (kinds) {
-  if (process.env.NODE_ENV !== 'production') {
-    checkKinds(kinds)
-  }
+function checkTag (tag, tagType, types) {
+  invariant(typeof tag === 'object', 'Tag must be an object')
+  invariant(typeof tag.type === 'string', 'Tag type must be a string')
+  invariant(tagType, 'Tag type must be prefixed')
+  invariant(types.includes(tagType), `Tag must be a tag of the union`)
+}
 
-  function Tag (kind, data) {
-    this._kind = kind
-    this._data = data
-  }
+function checkType (type, tagUnion) {
+  invariant(type, 'Type must be provided')
 
-  const tagUnion = {
-    match (tag, handlers, catchAll) {
-      if (process.env.NODE_ENV !== 'production') {
-        checkMatch(tag, handlers, catchAll, kinds, Tag)
-      }
-
-      const match = handlers[tag._kind]
-      return match ? match(tag._data) : catchAll()
+  for (const key in tagUnion) {
+    if (tagUnion[key] === type) {
+      return
     }
   }
 
-  for (let i = 0; i < kinds.length; i++) {
-    const kind = kinds[i]
-    tagUnion[kind] = data => new Tag(kind, data)
+  invariant(false, `Type must be a type of the union`)
+}
+
+function union (types, options) {
+  if (process.env.NODE_ENV !== 'production') {
+    checkTypes(types)
+  }
+
+  const prefix = (options && options.prefix) || ''
+  const prefixSize = prefix.length
+  const stripPrefix = prefixSize
+    ? tag =>
+      tag &&
+        tag.type &&
+        tag.type.startsWith(prefix) &&
+        tag.type.slice(prefixSize)
+    : x => x && x.type
+
+  const tagUnion = {
+    match (tag, handlers, catchAll) {
+      const tagType = stripPrefix(tag)
+      if (process.env.NODE_ENV !== 'production') {
+        checkTag(tag, tagType, types)
+        checkMatch(handlers, catchAll, types)
+      }
+
+      const match = tagType && handlers[tagType]
+      return match ? match(tag.data) : catchAll()
+    },
+    matches (tag, type) {
+      const tagType = stripPrefix(tag)
+      if (process.env.NODE_ENV !== 'production') {
+        checkTag(tag, tagType, types)
+        checkType(type, tagUnion)
+      }
+
+      return !!(tagType && tagUnion[tagType] === type)
+    }
+  }
+
+  for (let i = 0; i < types.length; i++) {
+    const type = types[i]
+    const prefixedType = prefix + type
+    tagUnion[type] = data => ({ type: prefixedType, data })
   }
 
   return tagUnion
