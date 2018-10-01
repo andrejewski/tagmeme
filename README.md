@@ -33,13 +33,31 @@ assert(isError)
 
 ## Documentation
 
-#### `union(types: string[], options: { prefix: string }): Union`
-Create a tagged union.
+This package includes:
 
-#### `Union[type](data: any): ({ type, data })`
+- [`union(types, options)`](#union)
+- [`Union[type](data)`](#uniontype)
+- [`Union.match(tag, handlers, catchAll)`](#unionmatch)
+- [`Union.matches(tag, variant)`](#unionmatches)
+- [`safeUnion(types, options)`](#safeunion)
+
+#### `union`
+> `union(types: Array<String>[, options: { prefix: String }]): Union`
+
+Create a tagged union. Throws if:
+  - `types` is not an array of unique strings
+  - any `types` are named "match" or "matches"
+
+See [`safeUnion`](#safeunion) if using arbitrary strings.
+
+#### `Union[type]`
+> `Union[type](data: any): ({ type, data })`
+
 Create a tag of the union containing `data` which can be retrieved via `Union.match`.
 
-#### `Union.match(tag, handlers, catchAll)`
+#### `Union.match`
+> `Union.match(tag, handlers[, catchAll: function])`
+
 Pattern match on `tag` with a hashmap of `handlers` where keys are kinds and values are functions, with an optional `catchAll` if no handler matches the value.
 Throws if:
   - `tag` is not of any of the union types
@@ -49,8 +67,16 @@ Throws if:
   - it handles all cases and there is a useless `catchAll`
   - it does not handle all cases and there is no `catchAll`
 
-#### `Union.matches(tag, Type): boolean`
+#### `Union.matches`
+> `Union.matches(tag, variant: Variant): boolean`
+
 Determine whether a given `tag` is of `Type`.
+
+#### `safeUnion`
+> `safeUnion(types: Array<String>[, options: { prefix: String }]): { methods, variants }`
+
+For library authors accepting arbitrary strings for type names, `safeUnion` is `union` but returns distinct collections of methods and type variants.
+This will not throw if a type is "match" or "matches".
 
 ## Name
 

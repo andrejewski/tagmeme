@@ -1,5 +1,5 @@
 import test from 'ava'
-import { union } from '../src/'
+import { union, safeUnion } from '../src/'
 
 test('union() should return an object with match method', t => {
   const Msg = union([])
@@ -199,4 +199,20 @@ test('tags should be de/serialize-able with prefixes', t => {
   )
 
   t.true(Msg.matches(tagCopy, Msg.Foo))
+})
+
+test('safeUnion() allows "match" and "matches" types', t => {
+  const { variants, methods } = safeUnion(['Foo', 'match', 'matches'])
+
+  t.true(methods.matches(variants.match(), variants.match))
+  t.true(methods.matches(variants.matches(), variants.matches))
+
+  t.is(
+    methods.match(variants.Foo(), {
+      Foo: () => 1,
+      match: () => 2,
+      matches: () => 3
+    }),
+    1
+  )
 })
