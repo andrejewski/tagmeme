@@ -76,17 +76,27 @@ function safeUnion (types, options) {
         tag.type.slice(prefixSize)
     : x => x && x.type
 
-  const methods = {
-    match (tag, handlers, catchAll) {
+  const matcher = (handlers, catchAll) => {
+    if (process.env.NODE_ENV !== 'production') {
+      checkMatch(handlers, catchAll, types)
+    }
+
+    return function _matcher (tag, context) {
       const tagType = stripPrefix(tag)
       if (process.env.NODE_ENV !== 'production') {
         checkTag(tag, tagType, types)
-        checkMatch(handlers, catchAll, types)
       }
 
       const match = tagType && handlers[tagType]
-      return match ? match(tag.data) : catchAll()
+      return match ? match(tag.data, context) : catchAll(context)
+    }
+  }
+
+  const methods = {
+    match (tag, handlers, catchAll) {
+      return matcher(handlers, catchAll)(tag)
     },
+    matcher,
     matches (tag, type) {
       const tagType = stripPrefix(tag)
       if (process.env.NODE_ENV !== 'production') {

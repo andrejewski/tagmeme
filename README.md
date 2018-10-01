@@ -26,6 +26,13 @@ const message = Result.match(err, {
 
 assert(message === 'My error')
 
+const handle = Result.matcher({
+  Ok: () => 'No error',
+  Err: error => error.message
+})
+
+assert(handle(err) === 'My error')
+
 const isError = Result.matches(err, Result.Err)
 
 assert(isError)
@@ -38,6 +45,7 @@ This package includes:
 - [`union(types, options)`](#union)
 - [`Union[type](data)`](#uniontype)
 - [`Union.match(tag, handlers, catchAll)`](#unionmatch)
+- [`Union.matcher(handlers, catchAll)`](#unionmatcher)
 - [`Union.matches(tag, variant)`](#unionmatches)
 - [`safeUnion(types, options)`](#safeunion)
 
@@ -46,7 +54,7 @@ This package includes:
 
 Create a tagged union. Throws if:
   - `types` is not an array of unique strings
-  - any `types` are named "match" or "matches"
+  - any `types` are named "match", "matcher", or "matches"
 
 See [`safeUnion`](#safeunion) if using arbitrary strings.
 
@@ -67,6 +75,15 @@ Throws if:
   - it handles all cases and there is a useless `catchAll`
   - it does not handle all cases and there is no `catchAll`
 
+#### `Union.matcher`
+> `Union.matcher(handlers[, catchAll: function])`
+
+Create a matching function which will take `tag` and `context` arguments.
+This reduces the boilerplate of a function that delegates to `Union.match` with static handlers.
+This is also a bit faster than `match` because the handler functions only need to be created once.
+
+Unlike with `match`, the second argument to handler will be `context` to avoid the need for a closure.
+
 #### `Union.matches`
 > `Union.matches(tag, variant: Variant): boolean`
 
@@ -76,7 +93,7 @@ Determine whether a given `tag` is of `Type`.
 > `safeUnion(types: Array<String>[, options: { prefix: String }]): { methods, variants }`
 
 For library authors accepting arbitrary strings for type names, `safeUnion` is `union` but returns distinct collections of methods and type variants.
-This will not throw if a type is "match" or "matches".
+This will not throw if a type is "match", "matcher", or "matches".
 
 ## Name
 
