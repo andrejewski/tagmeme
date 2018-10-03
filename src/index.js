@@ -7,8 +7,6 @@ function checkTypes (types) {
   for (let i = 0; i < types.length; i++) {
     const type = types[i]
     invariant(typeof type === 'string', 'Tag type must be a string')
-    invariant(type !== 'match', 'Tag type cannot be "match"')
-    invariant(type !== 'matches', 'Tag type cannot be "matches"')
     invariant(!seen[type], `Duplicate tag type "${type}". Types must be unique`)
     seen[type] = true
   }
@@ -63,7 +61,7 @@ function checkType (type, tagUnion) {
   invariant(false, `Type must be a type of the union`)
 }
 
-function union (types, options) {
+function safeUnion (types, options) {
   if (process.env.NODE_ENV !== 'production') {
     checkTypes(types)
   }
@@ -78,35 +76,58 @@ function union (types, options) {
         tag.type.slice(prefixSize)
     : x => x && x.type
 
-  const tagUnion = {
-    match (tag, handlers, catchAll) {
+  const matcher = (handlers, catchAll) => {
+    if (process.env.NODE_ENV !== 'production') {
+      checkMatch(handlers, catchAll, types)
+    }
+
+    return function _matcher (tag, context) {
       const tagType = stripPrefix(tag)
       if (process.env.NODE_ENV !== 'production') {
         checkTag(tag, tagType, types)
-        checkMatch(handlers, catchAll, types)
       }
 
       const match = tagType && handlers[tagType]
-      return match ? match(tag.data) : catchAll()
+      return match ? match(tag.data, context) : catchAll(context)
+    }
+  }
+
+  const methods = {
+    match (tag, handlers, catchAll) {
+      return matcher(handlers, catchAll)(tag)
     },
+    matcher,
     matches (tag, type) {
       const tagType = stripPrefix(tag)
       if (process.env.NODE_ENV !== 'production') {
         checkTag(tag, tagType, types)
-        checkType(type, tagUnion)
+        checkType(type, variants)
       }
 
-      return !!(tagType && tagUnion[tagType] === type)
+      return !!(tagType && variants[tagType] === type)
     }
   }
 
+  const variants = {}
   for (let i = 0; i < types.length; i++) {
     const type = types[i]
     const prefixedType = prefix + type
-    tagUnion[type] = data => ({ type: prefixedType, data })
+    variants[type] = data => ({ type: prefixedType, data })
   }
 
-  return tagUnion
+  return { variants, methods }
+}
+
+function union (types, options) {
+  const { variants, methods } = safeUnion(types, options)
+  for (const key in variants) {
+    if (process.env.NODE_ENV !== 'production') {
+      invariant(!methods[key], `Tag type cannot be "${key}"`)
+    }
+    methods[key] = variants[key]
+  }
+  return methods
 }
 
 exports.union = union
+exports.safeUnion = safeUnion

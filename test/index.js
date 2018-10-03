@@ -1,5 +1,5 @@
 import test from 'ava'
-import { union } from '../src/'
+import { union, safeUnion } from '../src/'
 
 test('union() should return an object with match method', t => {
   const Msg = union([])
@@ -25,6 +25,10 @@ test('union() should throw if there are duplicate kinds', t => {
 
 test('union() should throw if there is a kind "match"', t => {
   t.throws(() => union(['match']), /cannot be "match"/)
+})
+
+test('union() should throw if there is a kind "matcher"', t => {
+  t.throws(() => union(['matcher']), /cannot be "matcher"/)
 })
 
 test('union() should throw if there is a kind "matches"', t => {
@@ -122,6 +126,21 @@ test('match() should throw if a catch-all is not needed', t => {
   }, /remove unnecessary catch-all/)
 })
 
+test('matcher() should work', t => {
+  const Msg = union(['Inc', 'Dec', 'Wut'])
+  const update = Msg.matcher(
+    {
+      Inc: (num, memo) => memo + num,
+      Dec: (num, memo) => memo - num
+    },
+    memo => memo * memo
+  )
+
+  t.is(update(Msg.Inc(5), 1), 6)
+  t.is(update(Msg.Dec(2), 5), 3)
+  t.is(update(Msg.Wut(0), 2), 4)
+})
+
 test('matches() should return whether the tag matches type', t => {
   const Msg = union(['Foo', 'Bar'])
   t.true(Msg.matches(Msg.Foo(), Msg.Foo))
@@ -199,4 +218,27 @@ test('tags should be de/serialize-able with prefixes', t => {
   )
 
   t.true(Msg.matches(tagCopy, Msg.Foo))
+})
+
+test('safeUnion() allows "match", "matcher", and "matches" types', t => {
+  const { variants, methods } = safeUnion([
+    'Foo',
+    'match',
+    'matcher',
+    'matches'
+  ])
+
+  t.true(methods.matches(variants.match(), variants.match))
+  t.true(methods.matches(variants.matcher(), variants.matcher))
+  t.true(methods.matches(variants.matches(), variants.matches))
+
+  t.is(
+    methods.match(variants.Foo(), {
+      Foo: () => 1,
+      match: () => 2,
+      matcher: () => 3,
+      matches: () => 4
+    }),
+    1
+  )
 })
