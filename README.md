@@ -9,7 +9,17 @@ npm install tagmeme
 [![Build Status](https://travis-ci.org/andrejewski/tagmeme.svg?branch=master)](https://travis-ci.org/andrejewski/tagmeme)
 [![Greenkeeper badge](https://badges.greenkeeper.io/andrejewski/tagmeme.svg)](https://greenkeeper.io/)
 
-## Usage
+Tagmeme is a library for building tagged unions.
+This project offers:
+
+- A concise API for pattern matching and variant constructors
+- Data-oriented tags that can be serialized and namespaced
+- Errors in development to ensure exhaustive pattern matching
+- Small size and zero-dependencies in production using dead code elimination
+
+Let's check it out.
+
+## Examples
 
 ```js
 import assert from 'assert'
@@ -63,6 +73,17 @@ See [`safeUnion`](#safeunion) if using arbitrary strings.
 
 Create a tag of the union containing `data` which can be retrieved via `Union.match`.
 
+```js
+import assert from 'assert'
+import { union } from 'tagmeme'
+
+const Result = union(['Ok', 'Err'])
+const result = Result.Ok('good stuff')
+
+assert(result.type === 'Ok')
+assert(result.data === 'good stuff')
+```
+
 #### `Union.match`
 > `Union.match(tag, handlers[, catchAll: function])`
 
@@ -75,6 +96,21 @@ Throws if:
   - it handles all cases and there is a useless `catchAll`
   - it does not handle all cases and there is no `catchAll`
 
+```js
+import assert from 'assert'
+import { union } from 'tagmeme'
+
+const Result = union(['Ok', 'Err'])
+const result = Result.Err('Request failed')
+const status = Result.match(
+  result,
+  { Err: () => 400 },
+  () => 200
+})
+
+assert(status === 400)
+```
+
 #### `Union.matcher`
 > `Union.matcher(handlers[, catchAll: function])`
 
@@ -82,12 +118,36 @@ Create a matching function which will take `tag` and `context` arguments.
 This reduces the boilerplate of a function that delegates to `Union.match` with static handlers.
 This is also a bit faster than `match` because the handler functions only need to be created once.
 
-Unlike with `match`, the second argument to handler will be `context` to avoid the need for a closure.
+Unlike with `match`, the second argument to handlers will be `context` to avoid the need for a closure.
+
+```js
+import assert from 'assert'
+import { union } from 'tagmeme'
+
+const Result = union(['Ok', 'Err'])
+const collectErrors = Result.matcher({
+  Ok: (_, errors) => errors,
+  Err: (error, errors) => errors.concat(error)
+})
+
+const errors = collectErrors(Result.Err('Bad'), [])
+assert.deepEqual(errors, ['Bad'])
+```
 
 #### `Union.matches`
-> `Union.matches(tag, variant: Variant): boolean`
+> `Union.matches(tag, variant: Variant): Boolean`
 
-Determine whether a given `tag` is of `Type`.
+Determine whether a given `tag` is of `variant`.
+
+```js
+import assert from 'assert'
+import { union } from 'tagmeme'
+
+const Result = union(['Ok', 'Err'])
+const okTag = Result.Ok(1)
+
+assert(Result.matches(okTag, Result.Ok))
+```
 
 #### `safeUnion`
 > `safeUnion(types: Array<String>[, options: { prefix: String }]): { methods, variants }`
