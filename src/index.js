@@ -46,7 +46,7 @@ function checkMatch (handlers, catchAll, types) {
 function checkTag (tag, tagType, types) {
   invariant(typeof tag === 'object', 'Tag must be an object')
   invariant(typeof tag.type === 'string', 'Tag type must be a string')
-  invariant(tagType, 'Tag type must be prefixed')
+  invariant(typeof tagType === 'string', 'Tag type must be prefixed')
   invariant(types.includes(tagType), `Tag must be a tag of the union`)
 }
 
@@ -105,7 +105,7 @@ function safeUnion (types, options) {
         checkType(type, variants)
       }
 
-      return !!(tagType && variants[tagType] === type)
+      return !!(typeof tagType === 'string' && variants[tagType] === type)
     }
   }
 

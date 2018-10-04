@@ -148,6 +148,16 @@ test('match() should not treat Object.prototype properties as handlers', t => {
   A.match(A.constructor(1), {}, () => t.pass())
 })
 
+test('match() should work for empty string', t => {
+  const A = union([''])
+  A.match(A[''](1), { '': () => t.pass() })
+})
+
+test('match() should work for empty string with prefix', t => {
+  const A = union([''], { prefix: 'abc' })
+  A.match(A[''](1), { '': () => t.pass() })
+})
+
 test('matcher() should work', t => {
   const Msg = union(['Inc', 'Dec', 'Wut'])
   const update = Msg.matcher(
@@ -212,6 +222,11 @@ test('matches() should throw if type is not of the union', t => {
   t.throws(() => {
     A.matches(A.Foo(), B.Bar)
   }, /must be a type of the union/)
+})
+
+test('matches() should work for empty string', t => {
+  const A = union([''])
+  t.true(A.matches(A[''](1), A['']))
 })
 
 test('tags should be de/serialize-able', t => {
