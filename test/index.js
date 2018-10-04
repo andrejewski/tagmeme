@@ -47,6 +47,21 @@ test('union() prefix should prevent name conflicts', t => {
   t.notDeepEqual(A.Foo(), B.Foo())
 })
 
+test('union() should not throw for Object.prototype type names', t => {
+  const types = Object.getOwnPropertyNames(Object.prototype)
+  t.notThrows(() => {
+    union(types)
+  })
+})
+
+test('union() should not have Object.prototype properties (unless specified)', t => {
+  const props = Object.getOwnPropertyNames(Object.prototype)
+  const A = union([])
+  props.forEach(prop => {
+    t.is(A[prop], undefined, `Property ${prop} should be undefined`)
+  })
+})
+
 test('match() should return the handler return value', t => {
   const Msg = union(['Foo'])
   const val = Msg.Foo()
@@ -124,6 +139,13 @@ test('match() should throw if a catch-all is not needed', t => {
   t.throws(() => {
     Msg.match(val, { Foo: () => {} }, () => {})
   }, /remove unnecessary catch-all/)
+})
+
+test('match() should not treat Object.prototype properties as handlers', t => {
+  const types = Object.getOwnPropertyNames(Object.prototype)
+  const A = union(types)
+
+  A.match(A.constructor(1), {}, () => t.pass())
 })
 
 test('matcher() should work', t => {
