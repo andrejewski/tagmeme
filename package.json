@@ -1,7 +1,7 @@
 {
   "name": "tagmeme",
   "description": "Simple tagged unions",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "author": "Chris Andrejewski <christopher.andrejewski@gmail.com>",
   "babel": {
     "presets": [
