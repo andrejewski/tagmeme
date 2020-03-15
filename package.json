@@ -22,7 +22,7 @@
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-stage-3": "^6.24.1",
     "fixpack": "^2.3.1",
-    "standard": "^12.0.1"
+    "standard": "^14.3.3"
   },
   "homepage": "https://github.com/andrejewski/tagmeme#readme",
   "keywords": [
